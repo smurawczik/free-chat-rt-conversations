@@ -4,14 +4,10 @@ import {
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsResponse,
 } from '@nestjs/websockets';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
@@ -19,17 +15,11 @@ import { Server, Socket } from 'socket.io';
     origin: '*',
   },
 })
-export class ChatGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private logger: Logger = new Logger('ChatGateway', { timestamp: false });
-
-  afterInit(server: Server) {
-    this.logger.log('Initialized!');
-  }
+  private logger: Logger = new Logger('ChatGateway');
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
@@ -40,18 +30,33 @@ export class ChatGateway
     this.logger.log(`Client connected: ${client.id}: args: ${args}`);
   }
 
-  @SubscribeMessage('events')
-  findAll(
-    @MessageBody() data: any,
+  @SubscribeMessage('join-chat-room')
+  handleJoinChatRoom(
+    @MessageBody() data: { roomId: string },
     @ConnectedSocket() client: Socket,
-  ): Observable<WsResponse<number>> {
-    return from([1, 2, 3]).pipe(
-      map((item) => ({ event: 'events', data: item })),
-    );
+  ) {
+    client.join(data.roomId);
+    client.emit('joined-chat-room', { roomId: data.roomId });
   }
 
-  @SubscribeMessage('identity')
-  async identity(@MessageBody() data: number): Promise<number> {
-    return data;
+  @SubscribeMessage('leave-chat-room')
+  handleLeaveChatRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(data.roomId);
+    client.emit('left-chat-room', { roomId: data.roomId });
+  }
+
+  @SubscribeMessage('send-message')
+  handleMessage(
+    @MessageBody() data: { roomId: string; message: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log(data);
+
+    client
+      .to(data.roomId)
+      .emit('receive-message', { roomId: data.roomId, message: data.message });
   }
 }
