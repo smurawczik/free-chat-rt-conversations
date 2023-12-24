@@ -51,7 +51,12 @@ export class ConversationService {
               timestamp: 'ASC',
             },
           },
-          relations: ['participants', 'messages'],
+          relations: {
+            participants: true,
+            messages: {
+              sender: true,
+            },
+          },
         });
       }
 

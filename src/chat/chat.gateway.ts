@@ -10,6 +10,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { ConversationParticipant } from 'src/conversation/entities/conversation.participant.entity';
 import { Message } from 'src/message/entities/message.entity';
 import { MessageService } from 'src/message/message.service';
 import { Repository } from 'typeorm';
@@ -66,7 +67,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     data: {
       roomId: string;
       message: string;
-      userId: string;
+      sender: ConversationParticipant;
       timestamp: string;
     },
     @ConnectedSocket() client: Socket,
@@ -74,7 +75,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const message = this.messageRepository.create({
       id: uuidv4(),
       timestamp: new Date().toUTCString(),
-      sender: { id: data.userId },
+      sender: { id: data.sender.id },
       conversation: { id: data.roomId },
       message: data.message,
     });
@@ -85,7 +86,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomId: data.roomId,
       message: {
         id: message.id,
-        userId: data.userId,
+        sender: data.sender,
         message: data.message,
         timestamp: message.timestamp,
       },
