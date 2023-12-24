@@ -8,7 +8,7 @@ import {
   JoinTable,
 } from 'typeorm';
 import { ConversationParticipant } from './conversation.participant.entity';
-import { ConversationMessage } from './conversation.message.entity';
+import { Message } from 'src/message/entities/message.entity';
 
 @Entity()
 export class Conversation {
@@ -16,10 +16,10 @@ export class Conversation {
   id: string;
 
   @ManyToMany(() => ConversationParticipant)
-  @JoinTable({ name: 'conversation_participants' })
+  @JoinTable({ name: 'conversation_has_participants' })
   participants: ConversationParticipant[];
 
-  @OneToMany(() => ConversationMessage, (message) => message.conversation)
+  @OneToMany(() => Message, (message) => message.conversation)
   @JoinColumn({ name: 'messages' })
-  messages: ConversationMessage[];
+  messages: Message[];
 }

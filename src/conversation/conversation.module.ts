@@ -1,20 +1,16 @@
-import { Module } from '@nestjs/common';
-import { ConversationService } from './conversation.service';
-import { ConversationController } from './conversation.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Conversation } from './entities/conversation.entity';
-import { ConversationMessage } from './entities/conversation.message.entity';
-import { ConversationParticipant } from './entities/conversation.participant.entity';
 import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Message } from 'src/message/entities/message.entity';
+import { ConversationController } from './conversation.controller';
+import { ConversationService } from './conversation.service';
+import { Conversation } from './entities/conversation.entity';
+import { ConversationParticipant } from './entities/conversation.participant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Conversation,
-      ConversationParticipant,
-      ConversationMessage,
-    ]),
+    TypeOrmModule.forFeature([Conversation, ConversationParticipant, Message]),
     HttpModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

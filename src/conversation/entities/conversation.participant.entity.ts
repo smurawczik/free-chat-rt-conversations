@@ -1,6 +1,6 @@
 // User.entity.ts
+import { Message } from 'src/message/entities/message.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { ConversationMessage } from './conversation.message.entity';
 
 @Entity()
 export class ConversationParticipant {
@@ -16,6 +16,6 @@ export class ConversationParticipant {
   @Column()
   email: string;
 
-  @OneToMany(() => ConversationMessage, (message) => message.sender)
-  messages: ConversationMessage[];
+  @OneToMany(() => Message, (message) => message.sender)
+  messages: Message[];
 }

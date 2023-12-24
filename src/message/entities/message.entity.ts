@@ -1,4 +1,6 @@
 // Message.entity.ts
+import { Conversation } from 'src/conversation/entities/conversation.entity';
+import { ConversationParticipant } from 'src/conversation/entities/conversation.participant.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,16 +8,14 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { ConversationParticipant } from './conversation.participant.entity';
-import { Conversation } from './conversation.entity';
 
 @Entity()
-export class ConversationMessage {
+export class Message {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  timestamp: string;
+  @Column()
+  timestamp: Date;
 
   @ManyToOne(
     () => ConversationParticipant,

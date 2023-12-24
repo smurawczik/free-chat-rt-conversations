@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { Conversation } from './entities/conversation.entity';
-import { ConversationMessage } from './entities/conversation.message.entity';
 import { ConversationParticipant } from './entities/conversation.participant.entity';
 
 @Injectable()
@@ -15,9 +14,6 @@ export class ConversationService {
 
     @InjectRepository(ConversationParticipant)
     private conversationParticipantRepository: Repository<ConversationParticipant>,
-
-    @InjectRepository(ConversationMessage)
-    private conversationMessageRepository: Repository<ConversationMessage>,
 
     private readonly httpService: HttpService,
   ) {}
@@ -50,6 +46,11 @@ export class ConversationService {
 
         return this.conversationRepository.findOne({
           where: { id: conversation.id },
+          order: {
+            messages: {
+              timestamp: 'ASC',
+            },
+          },
           relations: ['participants', 'messages'],
         });
       }

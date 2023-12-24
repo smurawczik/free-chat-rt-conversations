@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   ConnectedSocket,
   MessageBody,
@@ -9,6 +10,10 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Message } from 'src/message/entities/message.entity';
+import { MessageService } from 'src/message/message.service';
+import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 @WebSocketGateway({
   cors: {
@@ -16,6 +21,13 @@ import { Server, Socket } from 'socket.io';
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(
+    @InjectRepository(Message)
+    private messageRepository: Repository<Message>,
+
+    private readonly messageService: MessageService,
+  ) {}
+
   @WebSocketServer()
   server: Server;
 
@@ -50,13 +62,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('send-message')
   handleMessage(
-    @MessageBody() data: { roomId: string; message: string },
+    @MessageBody()
+    data: {
+      roomId: string;
+      message: string;
+      userId: string;
+      timestamp: string;
+    },
     @ConnectedSocket() client: Socket,
   ) {
-    console.log(data);
+    const message = this.messageRepository.create({
+      id: uuidv4(),
+      timestamp: new Date().toUTCString(),
+      sender: { id: data.userId },
+      conversation: { id: data.roomId },
+      message: data.message,
+    });
 
-    client
-      .to(data.roomId)
-      .emit('receive-message', { roomId: data.roomId, message: data.message });
+    this.messageService.saveMessage(message);
+
+    client.to(data.roomId).emit('receive-message', {
+      roomId: data.roomId,
+      message: {
+        id: message.id,
+        userId: data.userId,
+        message: data.message,
+        timestamp: message.timestamp,
+      },
+    });
   }
 }
