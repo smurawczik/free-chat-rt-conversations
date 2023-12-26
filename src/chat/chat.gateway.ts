@@ -118,7 +118,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         },
       );
 
-      return Boolean(data.id && (status === 200 || status === 201));
+      return Boolean(data.id && status >= 200 && status <= 299);
     } catch (error) {
       return false;
     }
