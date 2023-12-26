@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -18,13 +19,16 @@ import { v4 as uuidv4 } from 'uuid';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: 'http://localhost:5173',
+    credentials: true,
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
+
+    private readonly httpService: HttpService,
 
     private readonly messageService: MessageService,
   ) {}
@@ -44,16 +48,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join-chat-room')
-  handleJoinChatRoom(
+  async handleJoinChatRoom(
     @MessageBody() data: { roomId: string },
     @ConnectedSocket() client: Socket,
   ) {
+    const validatedUser = await this.handleAuthValidation(client);
+
+    if (!validatedUser) {
+      return;
+    }
+
     client.join(data.roomId);
     client.emit('joined-chat-room', { roomId: data.roomId });
   }
 
   @SubscribeMessage('leave-chat-room')
-  handleLeaveChatRoom(
+  async handleLeaveChatRoom(
     @MessageBody() data: { roomId: string },
     @ConnectedSocket() client: Socket,
   ) {
@@ -62,7 +72,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send-message')
-  handleMessage(
+  async handleMessage(
     @MessageBody()
     data: {
       roomId: string;
@@ -72,6 +82,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
     @ConnectedSocket() client: Socket,
   ) {
+    const validatedUser = await this.handleAuthValidation(client);
+
+    if (!validatedUser) {
+      return;
+    }
+
     const message = this.messageRepository.create({
       id: uuidv4(),
       timestamp: new Date().toUTCString(),
@@ -91,5 +107,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         timestamp: message.timestamp,
       },
     });
+  }
+
+  async handleAuthValidation(@ConnectedSocket() client: Socket) {
+    try {
+      const { data, status } = await this.httpService.axiosRef.post(
+        'http://localhost:3000/auth/verify',
+        {
+          accessToken: client.handshake.headers.cookie?.split('=')[1],
+        },
+      );
+
+      return Boolean(data.id && (status === 200 || status === 201));
+    } catch (error) {
+      return false;
+    }
   }
 }

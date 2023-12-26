@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -29,7 +30,7 @@ import { MessageService } from './message/message.service';
         synchronize: true,
         dropSchema: true,
         autoLoadEntities: true,
-        logging: true,
+        // logging: true,
       }),
       inject: [ConfigService],
     }),
@@ -47,6 +48,18 @@ import { MessageService } from './message/message.service';
         removeOnFail: true,
         attempts: 2,
       },
+    }),
+    HttpModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        timeout: 5000,
+        maxRedirects: 3,
+        baseURL: `http://${configService.get<string>(
+          'USER_SERVICE_HOST',
+        )}:3000`,
+        withCredentials: true,
+      }),
+      inject: [ConfigService],
     }),
     ConversationModule,
     MessageModule,
