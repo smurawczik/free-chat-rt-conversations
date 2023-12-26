@@ -38,6 +38,15 @@ import { MessageService } from './message/message.service';
         host: 'localhost',
         port: 6379,
       },
+      limiter: {
+        max: 100,
+        duration: 1000,
+      },
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+        attempts: 2,
+      },
     }),
     ConversationModule,
     MessageModule,

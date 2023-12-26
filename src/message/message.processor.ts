@@ -19,12 +19,6 @@ export class MessageProcessor {
   handleTranscode(job: Job<{ message: Message }>) {
     try {
       this.logger.debug('saving message to database');
-      this.logger.debug(job.data);
-      // this.messageRepository.save({
-      //   id: job.data.id,
-      //   message: job.data.message,
-      //   timestamp: new Date(),
-      // });
       this.messageRepository.save({
         id: job.data.message.id,
         message: job.data.message.message,
