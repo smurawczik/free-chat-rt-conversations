@@ -25,6 +25,7 @@ export class MessageProcessor {
         timestamp: new Date(),
         conversation: job.data.message.conversation,
         sender: job.data.message.sender,
+        audioPath: job.data.message.audioPath,
       });
       this.logger.debug('saving complete');
     } catch (error) {

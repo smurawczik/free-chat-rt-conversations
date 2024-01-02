@@ -35,3 +35,8 @@ build/
 *.swp
 *.swo
 *~
+
+# Misc
+.DS_Store
+./upload
+/upload

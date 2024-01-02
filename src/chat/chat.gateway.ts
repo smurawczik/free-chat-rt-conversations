@@ -74,12 +74,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('send-message')
   async handleMessage(
     @MessageBody()
-    data: {
-      roomId: string;
-      message: string;
-      sender: ConversationParticipant;
-      timestamp: string;
-    },
+    data: Message & { roomId: string; sender: ConversationParticipant },
     @ConnectedSocket() client: Socket,
   ) {
     const validatedUser = await this.handleAuthValidation(client);
@@ -94,6 +89,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       sender: { id: data.sender.id },
       conversation: { id: data.roomId },
       message: data.message,
+      audioPath: data.audioPath,
     });
 
     this.messageService.saveMessage(message);
@@ -105,6 +101,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         sender: data.sender,
         message: data.message,
         timestamp: message.timestamp,
+        audioPath: message.audioPath,
       },
     });
   }

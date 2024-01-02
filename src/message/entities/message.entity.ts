@@ -30,4 +30,7 @@ export class Message {
 
   @Column()
   message: string;
+
+  @Column({ nullable: true })
+  audioPath: string;
 }
