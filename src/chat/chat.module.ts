@@ -3,27 +3,26 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Message } from 'src/message/entities/message.entity';
-import { ConversationController } from './conversation.controller';
-import { ConversationService } from './conversation.service';
-import { Conversation } from './entities/conversation.entity';
-import { ConversationParticipant } from './entities/conversation.participant.entity';
+import { MessageModule } from 'src/message/message.module';
+import { MessageService } from 'src/message/message.service';
+import { ChatGateway } from './chat.gateway';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Conversation, ConversationParticipant, Message]),
+    TypeOrmModule.forFeature([Message]),
     HttpModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         timeout: 5000,
         maxRedirects: 3,
-        baseURL: `${configService.get<string>('USERS_API_URL')}`,
+        baseURL: `${configService.get<string>('GATEWAY_API_URL')}`,
         withCredentials: true,
       }),
       inject: [ConfigService],
     }),
+    MessageModule,
   ],
-  controllers: [ConversationController],
-  providers: [ConversationService],
+  providers: [ChatGateway, MessageService],
   exports: [TypeOrmModule],
 })
-export class ConversationModule {}
+export class ChatModule {}

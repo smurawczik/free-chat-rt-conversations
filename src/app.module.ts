@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ChatGateway } from './chat/chat.gateway';
+import { ChatModule } from './chat/chat.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { MessageModule } from './message/message.module';
 import { MessageService } from './message/message.service';
@@ -21,9 +21,9 @@ import { MessageService } from './message/message.service';
       useFactory: async (configService: ConfigService) => ({
         type: 'mysql',
         host: `${configService.get<string>('DB_HOST')}`,
-        port: 3306,
-        username: 'docker',
-        password: 'docker',
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASSWORD'),
         database: 'conversations',
         entities: ['dist/**/*.entity{.ts,.js}'],
         migrations: ['dist/migrations/*{.ts,.js}'],
@@ -54,17 +54,16 @@ import { MessageService } from './message/message.service';
       useFactory: async (configService: ConfigService) => ({
         timeout: 5000,
         maxRedirects: 3,
-        baseURL: `http://${configService.get<string>(
-          'USER_SERVICE_HOST',
-        )}:3000`,
+        baseURL: `${configService.get<string>('GATEWAY_API_URL')}`,
         withCredentials: true,
       }),
       inject: [ConfigService],
     }),
     ConversationModule,
     MessageModule,
+    ChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway, MessageService],
+  providers: [AppService, MessageService],
 })
 export class AppModule {}

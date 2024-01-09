@@ -109,7 +109,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleAuthValidation(@ConnectedSocket() client: Socket) {
     try {
       const { data, status } = await this.httpService.axiosRef.post(
-        'http://localhost:3000/auth/verify',
+        '/auth/verify',
         {
           accessToken: client.handshake.headers.cookie?.split('=')[1],
         },
